@@ -14,6 +14,14 @@ public class Post {
     private Integer id;
     private String description;
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     private User user;

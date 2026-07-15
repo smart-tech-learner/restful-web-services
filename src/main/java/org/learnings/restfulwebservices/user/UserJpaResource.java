@@ -1,6 +1,7 @@
 package org.learnings.restfulwebservices.user;
 
 import jakarta.validation.Valid;
+import org.learnings.restfulwebservices.jpa.PostRepository;
 import org.learnings.restfulwebservices.jpa.UserRepository;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
@@ -15,10 +16,12 @@ import java.util.Optional;
 public class UserJpaResource {
 
     private UserRepository userRepository;
+    private PostRepository postRepository;
 
 
-    public UserJpaResource(UserRepository userRepository){
+    public UserJpaResource(UserRepository userRepository, PostRepository postRepository){
         this.userRepository = userRepository;
+        this.postRepository = postRepository;
     }
 
     @GetMapping("/jpa/users")
@@ -68,5 +71,23 @@ public class UserJpaResource {
 
         List<Post> posts = user.get().getPosts();
         return posts;
+    }
+
+    @PostMapping("/users/{id}/posts")
+    public ResponseEntity<Post> createPostByUser(@PathVariable int id, @RequestBody Post post){
+        Optional<User> user = userRepository.findById(id);
+        if(user.isEmpty()){
+            throw new UserNotFoundException("id::: "+id);
+        }
+
+        post.setUser(user.get());
+
+        Post savedPost = postRepository.save(post);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(savedPost.getId()).toUri();
+
+        return ResponseEntity.created(location).build();
+
     }
 }
